@@ -1,0 +1,14 @@
+{application, pal_oauth2, [
+	{description, "Pragmatic Authentication Library: OAuth2 workflows"},
+	{vsn, "0.1.0"},
+	{modules, []},
+	{registered, []},
+	{applications, [
+		kernel,
+		stdlib,
+		hackney,
+		uuid,
+		pal
+	]},
+	{env, []}
+]}.
