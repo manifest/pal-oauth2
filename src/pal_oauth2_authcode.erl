@@ -69,7 +69,6 @@
 -define(STATE, <<"state">>).
 -define(SCOPE, <<"scope">>).
 -define(CODE, <<"code">>).
--define(ERROR, <<"error">>).
 -define(LOCATION, <<"location">>).
 
 -define(ACCESS_TOKEN, <<"access_token">>).
@@ -328,16 +327,21 @@ init(Opts) ->
 
 -spec authenticate(map(), Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
 authenticate(_, Req, W) ->
-	{Code, Req2} = cowboy_req:qs_val(?CODE, Req),
-	{Error, Req3} = cowboy_req:qs_val(?ERROR, Req2),
+	#{code := Code, error := Error, state := ReqState} =
+		cowboy_req:match_qs(
+			[	{code, nonempty, undefined},
+				{error, nonempty, undefined},
+				{state, nonempty, undefined} ],
+			Req),
+
 	case {Code, Error} of
 		{undefined, undefined} ->
-			prepare_authorization_request_state(Req3, W);
+			prepare_authorization_request_state(Req, W);
 		{Code, undefined} ->
 			W2 = update_state(fun(State) -> State#state{code = Code} end, W),
-			authorization_request_state_check(Req3, W2);
+			authorization_request_state_check(ReqState, Req, W2);
 		{undefined, _} ->
-			authorization_request_error(Req3)
+			authorization_request_error(Req)
 	end.
 
 -spec credentials(workflow()) -> map().
@@ -395,31 +399,29 @@ authorization_request(Req, W) ->
 	Qs = cow_qs:qs(Params),
 	RedirectUri = <<Uri/binary, $?, Qs/binary>>,
 	
-	{ok, Req2} = pal_workflow:reply(303, [{?LOCATION, RedirectUri}], session(W), Req),
-	{halt, Req2}.
+	Req2 = pal_workflow:reply(303, [{?LOCATION, RedirectUri}], session(W), Req),
+	{stop, Req2}.
 
 -spec authorization_request_error(Req) -> {response(), Req} when Req :: cowboy_req:req().
 authorization_request_error(Req) ->
-	{ErrorL, Req2} = cowboy_req:qs_vals(Req),
-	{{fail, ErrorL}, Req2}.
+	ErrorM = cowboy_req:parse_qs(Req),
+	{{fail, ErrorM}, Req}.
 
--spec authorization_request_state_check(Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
-authorization_request_state_check(Req, W) ->
+-spec authorization_request_state_check(undefined | binary(), Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
+authorization_request_state_check(ReqState, Req, W) ->
 	case session(W) of
 		undefined ->
 			Resp = prepare_access_token_request(W),
 			{Resp, Req};
 		Session ->
-			{ReqState, Req2} = cowboy_req:qs_val(?STATE, Req),
-			{SesState, Req3} = Session:find(?STATE, Req2),
-
+			{SesState, Req2} = Session:find(?STATE, Req),
 			case ReqState =:= SesState of
 				true ->
-					Req4 = Session:remove(?STATE, Req3),
+					Req3 = Session:remove(?STATE, Req2),
 					Resp = prepare_access_token_request(W),
-					{Resp, Req4};
+					{Resp, Req3};
 				false ->
-					{{fail, <<"CSRF or an obsolete state value.">>}, Req3}
+					{{fail, <<"CSRF or an obsolete state value.">>}, Req2}
 			end
 	end.
 
