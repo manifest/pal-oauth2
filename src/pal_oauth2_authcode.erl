@@ -329,9 +329,9 @@ init(Opts) ->
 authenticate(_, Req, W) ->
 	#{code := Code, error := Error, state := ReqState} =
 		cowboy_req:match_qs(
-			[	{code, nonempty, undefined},
-				{error, nonempty, undefined},
-				{state, nonempty, undefined} ],
+			[	{code,  [], undefined},
+				{error, [], undefined},
+				{state, [], undefined} ],
 			Req),
 
 	case {Code, Error} of
