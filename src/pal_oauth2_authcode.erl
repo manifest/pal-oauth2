@@ -295,7 +295,7 @@ raw_info(W) ->
 init({Handler, Opts}) ->
 	RequiredBinaryParam =
 		fun(Name, Params) ->
-			try pt_mlist:get(Name, Params) of
+			try pt_kvterm:get(Name, Params) of
 				Val ->
 					pt_term:to_binary(Val)
 			catch
@@ -305,7 +305,7 @@ init({Handler, Opts}) ->
 		end,
 	BinaryListParam =
 		fun(Name, Params) ->
-			L = pt_mlist:get(Name, Params, []),
+			L = pt_kvterm:get(Name, Params, []),
 			lists:map(fun pt_term:to_binary/1, L)
 		end,
 
@@ -315,8 +315,8 @@ init({Handler, Opts}) ->
 			client_secret = RequiredBinaryParam(client_secret, Opts),
 			redirect_uri = RequiredBinaryParam(redirect_uri, Opts),
 			scope = BinaryListParam(scope, Opts),
-			session = pt_mlist:find(session, Opts),
-			req_opts = pt_mlist:get(request_options, Opts, [{follow_redirect, true}]),
+			session = pt_kvterm:find(session, Opts),
+			req_opts = pt_kvterm:get(request_options, Opts, [{follow_redirect, true}]),
 			auth_uri = RequiredBinaryParam(authorization_uri, Opts),
 			token_uri = RequiredBinaryParam(access_token_uri, Opts),
 			handler = Handler},
