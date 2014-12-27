@@ -38,8 +38,8 @@
 	scope/1,
 	code/1,
 	request_state/1,
+	request_state_handler/1,
 	request_options/1,
-	session/1,
 	state/1,
 	update_state/2,
 	handler/1,
@@ -86,23 +86,23 @@
 -type parameters() :: [{binary(), binary()}].
 
 -record(state, {
-	client_id       :: binary(),
-	client_secret   :: binary(),
-	redirect_uri    :: binary(),
-	scope           :: [binary()],
-	code            :: binary(),
+	client_id         :: binary(),
+	client_secret     :: binary(),
+	redirect_uri      :: binary(),
+	scope             :: [binary()],
+	code              :: binary(),
 
-	session         :: module(),
-	req_state       :: binary(),
-	req_opts        :: list(),
+	req_state_handler :: module(),
+	req_state         :: binary(),
+	req_opts          :: list(),
 
-	auth_uri        :: binary(),
-	auth_params     :: parameters(),
-	token_uri       :: binary(),
-	token_params    :: parameters(),
-	token_resp_body :: map(),
+	auth_uri          :: binary(),
+	auth_params       :: parameters(),
+	token_uri         :: binary(),
+	token_params      :: parameters(),
+	token_resp_body   :: map(),
 
-	handler         :: handler(any())
+	handler           :: handler(any())
 }).
 
 -type state() :: #state{}.
@@ -255,9 +255,9 @@ request_state(W) ->
 request_options(W) ->
 	(state(W))#state.req_opts.
 
--spec session(workflow()) -> module().
-session(W) ->
-	(state(W))#state.session.
+-spec request_state_handler(workflow()) -> module().
+request_state_handler(W) ->
+	(state(W))#state.req_state_handler.
 
 -spec state(workflow()) -> state().
 state(W) ->
@@ -315,7 +315,7 @@ init({Handler, Opts}) ->
 			client_secret = RequiredBinaryParam(client_secret, Opts),
 			redirect_uri = RequiredBinaryParam(redirect_uri, Opts),
 			scope = BinaryListParam(scope, Opts),
-			session = pt_kvterm:find(session, Opts),
+			req_state_handler = pt_kvterm:find(request_state, Opts),
 			req_opts = pt_kvterm:get(request_options, Opts, [{follow_redirect, true}]),
 			auth_uri = RequiredBinaryParam(authorization_uri, Opts),
 			token_uri = RequiredBinaryParam(access_token_uri, Opts),
@@ -376,14 +376,13 @@ rules(W) ->
 
 -spec prepare_authorization_request_state(Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
 prepare_authorization_request_state(Req, W) ->
-	case session(W) of
+	case request_state_handler(W) of
 		undefined ->
 			prepare_authorization_request(Req, W);
-		Session ->
-			ReqState = uuid:uuid_to_string(uuid:get_v4(), binary_nodash),
+		StateH ->
+			ReqState = StateH:new(Req),
 			W2 = update_state(fun(State) -> State#state{req_state = ReqState} end, W),
-			Req2 = Session:put(?STATE, ReqState, Req),
-			prepare_authorization_request(Req2, W2)
+			prepare_authorization_request(Req, W2)
 	end.
 
 -spec prepare_authorization_request(Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
@@ -399,7 +398,7 @@ authorization_request(Req, W) ->
 	Qs = cow_qs:qs(Params),
 	RedirectUri = <<Uri/binary, $?, Qs/binary>>,
 	
-	Req2 = pal_workflow:reply(303, [{?LOCATION, RedirectUri}], session(W), Req),
+	Req2 = cowboy_req:reply(303, [{?LOCATION, RedirectUri}], Req),
 	{stop, Req2}.
 
 -spec authorization_request_error(Req) -> {response(), Req} when Req :: cowboy_req:req().
@@ -409,19 +408,17 @@ authorization_request_error(Req) ->
 
 -spec authorization_request_state_check(undefined | binary(), Req, workflow()) -> {response(), Req} when Req :: cowboy_req:req().
 authorization_request_state_check(ReqState, Req, W) ->
-	case session(W) of
+	case request_state_handler(W) of
 		undefined ->
 			Resp = prepare_access_token_request(W),
 			{Resp, Req};
-		Session ->
-			{SesState, Req2} = Session:find(?STATE, Req),
-			case ReqState =:= SesState of
+		StateH ->
+			case StateH:check(ReqState, Req) of
 				true ->
-					Req3 = Session:remove(?STATE, Req2),
 					Resp = prepare_access_token_request(W),
-					{Resp, Req3};
+					{Resp, Req};
 				false ->
-					{{fail, <<"CSRF or an obsolete state value.">>}, Req2}
+					{{fail, <<"CSRF or an obsolete state value.">>}, Req}
 			end
 	end.
 
