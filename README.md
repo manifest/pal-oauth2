@@ -2,7 +2,7 @@
 
 The collection of OAuth2 workflows for [PAL][pal].
 
-### Authorization Code Grant workflow
+### The Authorization Code Grant workflow
 
 #### Options
 
