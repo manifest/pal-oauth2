@@ -6,8 +6,10 @@
 	{applications, [
 		kernel,
 		stdlib,
-		hackney,
-		pal
+		pal,
+		jsxn,
+		cowlib,
+		hackney
 	]},
 	{env, []}
 ]}.
