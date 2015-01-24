@@ -54,11 +54,14 @@ parse_error([], M)                            -> M.
 
 -spec parse_error_code(binary()) -> atom().
 parse_error_code(<<"invalid_request">>)           -> invalid_request;
-parse_error_code(<<"unauthorized_client">>)       -> unauthorized_client;
-parse_error_code(<<"access_denied">>)             -> access_denied;
-parse_error_code(<<"unsupported_response_type">>) -> unsupported_response_type;
+parse_error_code(<<"invalid_client">>)            -> invalid_client;
+parse_error_code(<<"invalid_grant">>)             -> invalid_grant;
 parse_error_code(<<"invalid_scope">>)             -> invalid_scope;
-parse_error_code(<<"server_error">>)              -> server_error;
+parse_error_code(<<"unauthorized_client">>)       -> unauthorized_client;
+parse_error_code(<<"unsupported_grant_type">>)    -> unsupported_grant_type;
+parse_error_code(<<"unsupported_response_type">>) -> unsupported_response_type;
 parse_error_code(<<"temporarily_unavailable">>)   -> temporarily_unavailable;
+parse_error_code(<<"access_denied">>)             -> access_denied;
+parse_error_code(<<"server_error">>)              -> server_error;
 parse_error_code(_)                               -> other_oauth2_error.
 
