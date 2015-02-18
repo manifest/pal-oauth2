@@ -1,4 +1,4 @@
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 %% The MIT License
 %%
 %% Copyright (c) 2014-2015 Andrei Nesterov <ae.nesterov@gmail.com>
@@ -20,7 +20,7 @@
 %% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 %% IN THE SOFTWARE.
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 
 -module(pal_oauth2_authcode).
 -behaviour(pal_authentication).
@@ -89,9 +89,9 @@
 %%
 %%	-callback access_token_request_fields(map()) -> fields().
 
-%% ==================================================================
+%% ============================================================================
 %% API
-%% ==================================================================
+%% ============================================================================
 
 -spec authorization_request(list(module()), map()) -> pal_authentication:result().
 authorization_request(Hs, State) ->
@@ -167,20 +167,20 @@ access_token_request_fields(State) ->
 		{?CODE,          Code},
 		{?GRANT_TYPE,    ?AUTHORIZATION_CODE} ].
 
-%% ==================================================================
+%% ============================================================================
 %% Workflow callbacks
-%% ==================================================================
+%% ============================================================================
 
--spec decl() -> pt_workflow:declaration().
+-spec decl() -> pal_workflow:declaration().
 decl() ->
 	Opts =
 		#{request_options => [{follow_redirect, true}]},
 
 	{pal_authentication, ?MODULE, Opts}.
 
-%% ==================================================================
+%% ============================================================================
 %% Authentication workflow callbacks
-%% ==================================================================
+%% ============================================================================
 
 -spec authenticate(list(module()), map(), map(), map()) -> pal_authentication:result().
 authenticate(Hs, #{code := Code}, _, State) ->
