@@ -5,7 +5,6 @@ dep_pal = git git://github.com/manifest/pal.git develop
 dep_jsx = git git://github.com/talentdeficit/jsx.git master
 dep_cowlib = git git://github.com/ninenines/cowlib.git master
 dep_hackney = git git://github.com/benoitc/hackney.git master
-AUTOPATCH += jsx hackney
 
 PLT_APPS = pt
 SHELL_OPTS = \
