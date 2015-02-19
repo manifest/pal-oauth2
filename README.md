@@ -1,8 +1,8 @@
 # Pragmatic Authentication Library: OAuth2 workflows
 
-The collection of OAuth2 workflows for [PAL][pal].
+Collection of OAuth2 workflows for [PAL][pal].
 
-### The Authorization Code Grant workflow
+### Authorization Code Grant workflow
 
 #### Options
 

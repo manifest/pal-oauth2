@@ -1,4 +1,4 @@
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 %% The MIT License
 %%
 %% Copyright (c) 2014-2015 Andrei Nesterov <ae.nesterov@gmail.com>
@@ -20,7 +20,7 @@
 %% LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 %% FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 %% IN THE SOFTWARE.
-%% ------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
 
 -module(pal_oauth2).
 
@@ -36,9 +36,9 @@
 -define(ERROR_URI, <<"error_uri">>).
 -define(STATE, <<"state">>).
 
-%% ==================================================================
+%% ============================================================================
 %% API
-%% ==================================================================
+%% ============================================================================
 
 -spec parse_error([{binary(), binary() | true}]) -> map().
 parse_error(Data) ->
@@ -54,11 +54,14 @@ parse_error([], M)                            -> M.
 
 -spec parse_error_code(binary()) -> atom().
 parse_error_code(<<"invalid_request">>)           -> invalid_request;
-parse_error_code(<<"unauthorized_client">>)       -> unauthorized_client;
-parse_error_code(<<"access_denied">>)             -> access_denied;
-parse_error_code(<<"unsupported_response_type">>) -> unsupported_response_type;
+parse_error_code(<<"invalid_client">>)            -> invalid_client;
+parse_error_code(<<"invalid_grant">>)             -> invalid_grant;
 parse_error_code(<<"invalid_scope">>)             -> invalid_scope;
-parse_error_code(<<"server_error">>)              -> server_error;
+parse_error_code(<<"unauthorized_client">>)       -> unauthorized_client;
+parse_error_code(<<"unsupported_grant_type">>)    -> unsupported_grant_type;
+parse_error_code(<<"unsupported_response_type">>) -> unsupported_response_type;
 parse_error_code(<<"temporarily_unavailable">>)   -> temporarily_unavailable;
+parse_error_code(<<"access_denied">>)             -> access_denied;
+parse_error_code(<<"server_error">>)              -> server_error;
 parse_error_code(_)                               -> other_oauth2_error.
 
