@@ -159,9 +159,9 @@ access_token_request(State) ->
 			Reason = pal_oauth2:parse_error(jsx:decode(Body)),
 			{error, {oauth2, Reason}};
 		{ok, Status, _, _} ->
-			throw({bad_resp, Status});
+			exit({{bad_status, Status}, {?MODULE, access_token_request, [State]}});
 		{error, Reason} ->
-			throw({bad_req, Reason})
+			exit({Reason, {?MODULE, access_token_request, [State]}})
 	end.
 
 -spec access_token_request_fields(map()) -> fields().
