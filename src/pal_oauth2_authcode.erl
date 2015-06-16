@@ -28,6 +28,7 @@
 
 %% API
 -export([
+	scope/1,
 	authorization_request/1,
 	authorization_request/2,
 	authorization_request_fields/1,
@@ -75,6 +76,10 @@
 
 %% Optional.
 %%
+%%	-callback scope(list(binary())) -> binary().
+
+%% Optional.
+%%
 %%	-callback authorization_request(map()) -> pal_authentication:result().
 
 %% Optional.
@@ -95,7 +100,8 @@
 
 -spec authorization_request(list(module()), map()) -> pal_authentication:result().
 authorization_request(Hs, State) ->
-	Fields = pt_modlist:callr(Hs, authorization_request_fields, [State]),
+	Scope = pt_modlist:callr(Hs, scope, [maps:get(scope, State)]),
+	Fields = pt_modlist:callr(Hs, authorization_request_fields, [State#{request_scope => Scope}]),
 	pt_modlist:callr(Hs, authorization_request, [State#{request_fields => Fields}]).
 
 -spec authorization_request(map()) -> pal_authentication:result().
@@ -109,9 +115,13 @@ authorization_request(State) ->
 
 	{stop, HttpResp}.
 
+-spec scope(list(binary())) -> binary().
+scope(L) ->
+	pt_binary:join(L, <<$\s>>).
+
 -spec authorization_request_fields(map()) -> fields().
 authorization_request_fields(State) ->
-	#{scope := Scope,
+	#{request_scope := Scope,
 		client_id := ClientID,
 		redirect_uri := RedirectUri} = State,
 
@@ -119,7 +129,7 @@ authorization_request_fields(State) ->
 		[	{?RESPONSE_TYPE, ?CODE},
 			{?CLIENT_ID,     ClientID},
 			{?REDIRECT_URI,  RedirectUri},
-			{?SCOPE,         pt_binary:join(Scope, <<$\s>>)} ],
+			{?SCOPE,         Scope} ],
 
 	case maps:find(state, State) of
 		{ok, ReqState} -> [{?STATE, ReqState}|Fields];
@@ -149,9 +159,9 @@ access_token_request(State) ->
 			Reason = pal_oauth2:parse_error(jsx:decode(Body)),
 			{error, {oauth2, Reason}};
 		{ok, Status, _, _} ->
-			throw({bad_resp, Status});
+			exit({{bad_status, Status}, {?MODULE, access_token_request, [State]}});
 		{error, Reason} ->
-			throw({bad_req, Reason})
+			exit({Reason, {?MODULE, access_token_request, [State]}})
 	end.
 
 -spec access_token_request_fields(map()) -> fields().
