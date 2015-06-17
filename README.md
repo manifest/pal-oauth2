@@ -6,7 +6,7 @@ Collection of OAuth2 workflows for [PAL][pal].
 
 #### Options
 
-You can configure the workflow, passing the options into `pal:new/2` or `pal:group/2` functions:
+You can configure the workflow by passing options below into `pal:new/2` or `pal:group/2` functions:
 
 - `client_id` (required) -
 		The client identifier, a unique string representing the registration information provided by the client.
@@ -23,7 +23,7 @@ You can configure the workflow, passing the options into `pal:new/2` or `pal:gro
 - `scope` (optional) -
 		The scope of the access request.
 - `request_options` (optional) -
-		Request options, in the format of [hackney][hackney] HTTP client.
+		Options for the [hackney][hackney] HTTP client.
 - `includes` (optional) -
 		Parts of authentication schema to be processed by the workflow.
 		All by default, `[uid, credentials, info, extra, rules]`.
@@ -40,8 +40,8 @@ You can configure the workflow, passing the options into `pal:new/2` or `pal:gro
 
 #### Authentication Schema
 
-If an execution of the `pal:authenticate/{2,3}` function were successful,
-the authentication schema would be returned:
+An successful execution of `pal:authenticate/{2,3}` function returns
+the authentication schema below.
 
 ```erlang
 #{access_token  => <<"...">>,
@@ -50,9 +50,9 @@ the authentication schema would be returned:
   refresh_token => <<"...">>}
 ```
 
-Keys were named according to [RFC 6749][rfc6749-credentials].
+Keys are named according to [RFC 6749][rfc6749-credentials].
 
-See the complete example using PAL and [Cowboy][cowboy] HTTP server [here][pal-example].
+See a complete example using PAL and [Cowboy][cowboy] HTTP server [here][pal-example].
 
 ### License
 
